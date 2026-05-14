@@ -1,0 +1,3 @@
+D:/Git/ap_server/dist/detection/build/CMakeFiles/DetectionServer.dir
+D:/Git/ap_server/dist/detection/build/CMakeFiles/ALL_BUILD.dir
+D:/Git/ap_server/dist/detection/build/CMakeFiles/ZERO_CHECK.dir

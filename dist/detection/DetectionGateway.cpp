@@ -52,4 +52,19 @@ void DetectionGateway::registerRoutes(uWS::App& app) {
             std::cout << "[Gateway] 클라이언트 연결 해제 (code=" << code << ")\n";
         }
     });
+
+    // HTTP GET /logs → getAllLogs() 결과 반환
+    app.get("/logs", [this](auto* res, auto* req) {
+        auto logs = detectionService_.getAllLogs();
+    
+        json response = json::array();
+        
+        for (const auto& log : logs) {
+            response.push_back(log);
+        }
+    
+        res->writeHeader("Content-Type", "application/json")
+           ->writeHeader("Access-Control-Allow-Origin", "*")
+           ->end(response.dump(2));
+});
 }

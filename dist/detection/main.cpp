@@ -4,6 +4,7 @@
 
 // Nest.js의 main.ts (bootstrap 함수) 에 대응
 int main() {
+    SetConsoleOutputCP(CP_UTF8);
     // 1. 서비스 생성 (NestFactory + DI 컨테이너 역할)
     DetectionService detectionService;
 
