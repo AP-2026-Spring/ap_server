@@ -18,6 +18,12 @@ static std::string getCurrentTimestamp() {
 json DetectionService::saveDetection(const json& data) {
     std::lock_guard<std::mutex> lock(mutex_);
 
+    if(data["confidence"] < 0.7)
+    {
+        std::cout << "신호 무시됨 (confidence < 0.7): " << data.dump() << "\n";
+        return json{};
+    }
+
     // 새 레코드 생성: { id, ...data, timestamp }
     json newRecord = data;
     newRecord["id"]        = static_cast<int>(detectionLogs_.size()) + 1;
