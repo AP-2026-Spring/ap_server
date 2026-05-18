@@ -19,13 +19,13 @@ find_package(ZLIB REQUIRED)
 
 # 소스 파일 목록
 add_executable(DetectionServer
-    main.cpp
-    DetectionService.cpp
-    DetectionGateway.cpp
+    src/main.cpp
+    src/DetectionService.cpp
+    src/DetectionGateway.cpp
 )
 
 # 헤더 경로
-target_include_directories(DetectionServer PRIVATE ${CMAKE_SOURCE_DIR})
+target_include_directories(DetectionServer PRIVATE ${CMAKE_SOURCE_DIR}/include)
 
 # 라이브러리 링크
 target_link_libraries(DetectionServer PRIVATE

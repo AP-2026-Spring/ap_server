@@ -1,7 +1,0 @@
-{
-	"InstallScripts" : 
-	[
-		"D:/Git/ap_server/dist/detection/build/cmake_install.cmake"
-	],
-	"Parallel" : false
-}
