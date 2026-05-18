@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>카메라 관리 - 유해동물 감지 시스템</title>
+  <meta name="description" content="선택한 카메라의 스냅샷과 탐지 설정, 통계를 확인합니다" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header container">
+    <button id="backBtn" class="back-btn">← 뒤로가기</button>
+    <div id="cameraHeader" style="display: flex; align-items: center; gap: 1rem;"></div>
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 0.75rem;">
+      <span style="font-size: 0.9rem; color: var(--color-text-secondary);">카메라 전원</span>
+      <label class="toggle">
+        <input type="checkbox" id="cameraPower" checked />
+        <span class="slider"></span>
+      </label>
+    </div>
+  </header>
+
+  <main class="container">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+      <!-- Snapshot viewer (Left Column) -->
+      <section class="card" style="cursor: default; margin: 0; padding: 1.5rem;">
+        <h3 style="font-size: 1.2rem; font-weight: 600; color: #fff; margin-bottom: 1rem;">실시간 감지 스냅샷 (Static Snapshot)</h3>
+        <div style="position: relative; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--color-surface-border); box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
+          <img id="snapshotImg" src="" alt="Detection snapshot" style="width: 100%; display: block;" />
+        </div>
+        <p id="snapshotInfo" class="mt-1" style="font-size: 0.95rem; line-height: 1.5; color: var(--color-text-primary);"></p>
+      </section>
+
+      <!-- Info & settings panel (Right Column) -->
+      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <!-- Recent Event Card -->
+        <section class="card" style="cursor: default; margin: 0;">
+          <h3 style="font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 0.8rem;">최근 감지 이벤트</h3>
+          <p id="recentEvent" style="font-size: 1rem; color: var(--color-danger); font-weight: 500;">-</p>
+        </section>
+
+        <!-- Target Configuration Card -->
+        <section class="card" style="cursor: default; margin: 0;">
+          <h3 style="font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 1rem;">탐지 대상 설정 (필터링)</h3>
+          <div style="display: flex; flex-direction: column; gap: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <span style="font-size: 0.95rem; color: var(--color-text-primary);">쥐 감지 활성화</span>
+              <label class="toggle">
+                <input type="checkbox" id="detectMouse" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--color-surface-border); padding-top: 1rem;">
+              <span style="font-size: 0.95rem; color: var(--color-text-primary);">바퀴벌레 감지 활성화</span>
+              <label class="toggle">
+                <input type="checkbox" id="detectCockroach" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- Weekly chart -->
+    <section class="card" style="cursor: default; margin: 0 0 2rem 0;">
+      <h3 style="font-size: 1.2rem; font-weight: 600; color: #fff; margin-bottom: 0.8rem;">최근 7일 감지 횟수</h3>
+      <div class="chart-bar" id="weeklyChart"></div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script src="camera.js"></script>
+</body>
+</html>
