@@ -22,6 +22,7 @@ bool DatabaseManager::initialize() {
     const char* sql = R"(
         CREATE TABLE IF NOT EXISTS detections (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            camera_id INTEGER,
             class_name TEXT NOT NULL,
             confidence REAL NOT NULL,
             x REAL,
@@ -45,12 +46,12 @@ bool DatabaseManager::initialize() {
     return true;
 }
 
-int DatabaseManager::saveDetection(const std::string& class_name, double confidence,
+int DatabaseManager::saveDetection(int camera_id, const std::string& class_name, double confidence,
                                    double x, double y, double w, double h,
                                    const std::string& timestamp, const std::string& image_data) {
     std::lock_guard<std::mutex> lock(db_mutex_);
 
-    const char* sql = "INSERT INTO detections (class_name, confidence, x, y, w, h, timestamp, image_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?);";
+    const char* sql = "INSERT INTO detections (camera_id, class_name, confidence, x, y, w, h, timestamp, image_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);";
     sqlite3_stmt* stmt;
 
     if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) {
@@ -58,14 +59,15 @@ int DatabaseManager::saveDetection(const std::string& class_name, double confide
         return -1;
     }
 
-    sqlite3_bind_text(stmt, 1, class_name.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_double(stmt, 2, confidence);
-    sqlite3_bind_double(stmt, 3, x);
-    sqlite3_bind_double(stmt, 4, y);
-    sqlite3_bind_double(stmt, 5, w);
-    sqlite3_bind_double(stmt, 6, h);
-    sqlite3_bind_text(stmt, 7, timestamp.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 8, image_data.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 1, camera_id);
+    sqlite3_bind_text(stmt, 2, class_name.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_double(stmt, 3, confidence);
+    sqlite3_bind_double(stmt, 4, x);
+    sqlite3_bind_double(stmt, 5, y);
+    sqlite3_bind_double(stmt, 6, w);
+    sqlite3_bind_double(stmt, 7, h);
+    sqlite3_bind_text(stmt, 8, timestamp.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 9, image_data.c_str(), -1, SQLITE_TRANSIENT);
 
     int rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE) {
@@ -83,7 +85,7 @@ std::vector<json> DatabaseManager::getAllDetections() {
     std::lock_guard<std::mutex> lock(db_mutex_);
     std::vector<json> results;
 
-    const char* sql = "SELECT id, class_name, confidence, x, y, w, h, timestamp, image_data FROM detections;";
+    const char* sql = "SELECT id, camera_id, class_name, confidence, x, y, w, h, timestamp, image_data FROM detections;";
     sqlite3_stmt* stmt;
 
     if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) != SQLITE_OK) {
@@ -94,20 +96,21 @@ std::vector<json> DatabaseManager::getAllDetections() {
     while (sqlite3_step(stmt) == SQLITE_ROW) {
         json row;
         row["id"] = sqlite3_column_int(stmt, 0);
+        row["camera_id"] = sqlite3_column_int(stmt, 1);
         
-        const unsigned char* class_name = sqlite3_column_text(stmt, 1);
+        const unsigned char* class_name = sqlite3_column_text(stmt, 2);
         if (class_name) row["class_name"] = reinterpret_cast<const char*>(class_name);
         
-        row["confidence"] = sqlite3_column_double(stmt, 2);
-        row["x"] = sqlite3_column_double(stmt, 3);
-        row["y"] = sqlite3_column_double(stmt, 4);
-        row["w"] = sqlite3_column_double(stmt, 5);
-        row["h"] = sqlite3_column_double(stmt, 6);
+        row["confidence"] = sqlite3_column_double(stmt, 3);
+        row["x"] = sqlite3_column_double(stmt, 4);
+        row["y"] = sqlite3_column_double(stmt, 5);
+        row["w"] = sqlite3_column_double(stmt, 6);
+        row["h"] = sqlite3_column_double(stmt, 7);
         
-        const unsigned char* timestamp = sqlite3_column_text(stmt, 7);
+        const unsigned char* timestamp = sqlite3_column_text(stmt, 8);
         if (timestamp) row["timestamp"] = reinterpret_cast<const char*>(timestamp);
         
-        const unsigned char* image_data = sqlite3_column_text(stmt, 8);
+        const unsigned char* image_data = sqlite3_column_text(stmt, 9);
         if (image_data) row["image_data"] = reinterpret_cast<const char*>(image_data);
 
         results.push_back(row);

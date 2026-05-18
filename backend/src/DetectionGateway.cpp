@@ -195,4 +195,11 @@ app.get("/logs", [this](auto* res, auto* req) {
        ->writeHeader("Access-Control-Allow-Origin", "*")
        ->end(response.dump(2));
 });
+
+// HTTP GET /devices → JSON 데이터
+app.get("/devices", [this](auto* res, auto* req) {
+    res->writeHeader("Content-Type", "application/json")
+       ->writeHeader("Access-Control-Allow-Origin", "*")
+       ->end(detectionService_.getDevices().dump(2));
+});
 }

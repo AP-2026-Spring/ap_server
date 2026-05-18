@@ -18,6 +18,12 @@ public:
     // getAllLogs() 에 대응 (나중에 HTTP로 노출할 예정)
     std::vector<json> getAllLogs() const;
 
+    // 기기 목록 반환
+    json getDevices() const;
+
+    // 목데이터 DB 시딩
+    void seedMockData();
+
 private:
     std::unique_ptr<DatabaseManager> dbManager_;
     std::vector<json> detectionLogs_;   // private detectionLogs: any[]

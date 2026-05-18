@@ -15,7 +15,7 @@ public:
     bool initialize();
 
     // detection 데이터 저장 (id 반환, 실패시 -1)
-    int saveDetection(const std::string& class_name, double confidence,
+    int saveDetection(int camera_id, const std::string& class_name, double confidence,
                       double x, double y, double w, double h,
                       const std::string& timestamp, const std::string& image_data);
 
