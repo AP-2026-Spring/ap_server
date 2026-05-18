@@ -18,8 +18,18 @@ public:
     // getAllLogs() 에 대응 (나중에 HTTP로 노출할 예정)
     std::vector<json> getAllLogs() const;
 
+    // 기기 목록 반환
+    json getDevices() const;
+
+    // 모의 카메라 상태 업데이트 (Test Mode)
+    void updateMockCameraState(int camera_id, bool enabled);
+
+    // 목데이터 DB 시딩
+    void seedMockData();
+
 private:
     std::unique_ptr<DatabaseManager> dbManager_;
-    std::vector<json> detectionLogs_;   // private detectionLogs: any[]
-    mutable std::mutex mutex_;          // 멀티스레드 안전을 위한 뮤텍스
+    std::vector<json> detectionLogs_;   
+    mutable std::mutex mutex_;          
+    json mockDevices_;                  // 인메모리 기기 상태 저장용
 };

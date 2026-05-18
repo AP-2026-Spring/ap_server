@@ -195,4 +195,68 @@ app.get("/logs", [this](auto* res, auto* req) {
        ->writeHeader("Access-Control-Allow-Origin", "*")
        ->end(response.dump(2));
 });
+
+// HTTP GET /devices → JSON 데이터
+app.get("/devices", [this](auto* res, auto* req) {
+    res->writeHeader("Content-Type", "application/json")
+       ->writeHeader("Access-Control-Allow-Origin", "*")
+       ->end(detectionService_.getDevices().dump(2));
+});
+
+// CORS Preflight for POST
+app.options("/camera/control", [](auto* res, auto* req) {
+    res->writeHeader("Access-Control-Allow-Origin", "*")
+       ->writeHeader("Access-Control-Allow-Methods", "POST, OPTIONS")
+       ->writeHeader("Access-Control-Allow-Headers", "Content-Type")
+       ->end();
+});
+
+// HTTP POST /camera/control → Mock or Real WebSocket to Raspberry Pi
+app.post("/camera/control", [this](auto* res, auto* req) {
+    // To handle async data, uWS requires us to buffer the data
+    res->onAborted([]() { /* handle abort */ });
+    
+    std::string* buffer = new std::string();
+    res->onData([this, res, buffer](std::string_view data, bool isLast) {
+        buffer->append(data.data(), data.length());
+        if (isLast) {
+            try {
+                json reqJson = json::parse(*buffer);
+                
+                // TEST MODE FLAG (In real scenario, this could be from config)
+                bool isTestMode = true; 
+                
+                int cam_id = reqJson.value("camera_id", 0);
+                std::string action = reqJson.value("action", "");
+                bool enabled = (action == "ON" || reqJson.value("enabled", false));
+                
+                if (isTestMode) {
+                    std::cout << "[Test Mode] Mocking Raspberry Pi WebSocket signal (In-Memory)\n";
+                    std::cout << "[Test Mode] Payload: " << reqJson.dump() << "\n";
+                    
+                    // Actually update the in-memory mock device state!
+                    detectionService_.updateMockCameraState(cam_id, enabled);
+                    
+                    json response = {{"success", true}, {"mocked", true}, {"message", "Mocked Raspberry Pi WebSocket signal"}};
+                    res->writeHeader("Content-Type", "application/json")
+                       ->writeHeader("Access-Control-Allow-Origin", "*")
+                       ->end(response.dump());
+                } else {
+                    // Send to actual WebSocket (Not fully implemented here, would need to find the correct ws client)
+                    std::cout << "[Live Mode] Should send to Raspberry Pi WebSocket: " << reqJson.dump() << "\n";
+                    
+                    json response = {{"success", true}, {"mocked", false}, {"message", "Sent to Raspberry Pi"}};
+                    res->writeHeader("Content-Type", "application/json")
+                       ->writeHeader("Access-Control-Allow-Origin", "*")
+                       ->end(response.dump());
+                }
+            } catch (const std::exception& e) {
+                res->writeStatus("400 Bad Request")
+                   ->writeHeader("Access-Control-Allow-Origin", "*")
+                   ->end("Invalid JSON");
+            }
+            delete buffer;
+        }
+    });
+});
 }

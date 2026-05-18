@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>유해동물 감지 시스템 - 대시보드</title>
+  <meta name="description" content="엣지 디바이스 상태를 한눈에 확인하고 새 기기를 추가할 수 있는 대시보드" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header container">
+    <h1>유해동물 감지 시스템</h1>
+    <span class="mode-badge">엣지 관리자 모드</span>
+  </header>
+
+  <main class="container">
+    <div style="margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+      <h2 style="font-size: 1.25rem; font-weight: 600; color: #fff;">연결된 엣지 기기 목록</h2>
+    </div>
+    <section class="device-grid" id="deviceGrid">
+      <!-- Device cards will be injected by JS -->
+    </section>
+  </main>
+
+  <!-- Floating Action Button -->
+  <div class="fab" id="fabAdd">+</div>
+
+  <!-- Add Device Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <h2>새 기기 등록</h2>
+      <form id="addDeviceForm">
+        <input type="text" id="deviceName" placeholder="기기 이름 (선택)" />
+        <input type="text" id="deviceIP" placeholder="IP 주소 (필수)" required />
+        <input type="text" id="deviceOS" placeholder="OS 정보 (예: Ubuntu 22.04 LTS)" />
+        <div class="modal-actions">
+          <button type="button" id="testConnection" class="secondary">연결 테스트</button>
+          <button type="submit" class="primary">기기 등록</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

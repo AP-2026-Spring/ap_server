@@ -25,12 +25,12 @@ int main() {
     std::string test_time = "2026-05-18T12:00:00Z";
     std::string test_img = "base64_encoded_dummy_data";
 
-    int id1 = dbManager.saveDetection(test_class, test_conf, tx, ty, tw, th, test_time, test_img);
+    int id1 = dbManager.saveDetection(101, test_class, test_conf, tx, ty, tw, th, test_time, test_img);
     assert(id1 > 0 && "First insertion failed.");
     std::cout << "[OK] First record insertion (ID: " << id1 << ")\n";
 
     // 신뢰도가 낮은 데이터 (예: 자동차) 삽입
-    int id2 = dbManager.saveDetection("car", 0.45, 0, 0, 50, 50, "2026-05-18T12:05:00Z", "");
+    int id2 = dbManager.saveDetection(102, "car", 0.45, 0, 0, 50, 50, "2026-05-18T12:05:00Z", "");
     assert(id2 > 0 && "Second insertion failed.");
     std::cout << "[OK] Second record insertion (ID: " << id2 << ")\n";
 

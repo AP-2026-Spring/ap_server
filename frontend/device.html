@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>기기 관리 - 유해동물 감지 시스템</title>
+  <meta name="description" content="선택한 엣지 기기의 카메라와 통계를 관리합니다" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="header container">
+    <button id="backBtn" class="back-btn">← 뒤로가기</button>
+    <div id="deviceInfo" style="display: flex; align-items: center; gap: 1.5rem;"></div>
+  </header>
+
+  <main class="container">
+    <div style="margin-bottom: 2rem;">
+      <h2 style="font-size: 1.25rem; font-weight: 600; color: #fff; margin-bottom: 1rem;">연결된 카메라 목록</h2>
+      <section id="cameraList" class="device-grid">
+        <!-- Camera cards injected by JS -->
+      </section>
+    </div>
+
+    <section id="statsPanel" class="card" style="cursor: default; max-width: 800px; margin: 2rem 0 0 0;">
+      <h3 style="font-size: 1.2rem; font-weight: 600; color: #fff; margin-bottom: 1.25rem;">기기 통계 요약 (최근 7일)</h3>
+      <div style="display: flex; gap: 2rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+        <div>
+          <span style="font-size: 0.9rem; color: var(--color-text-secondary);">금일 전체 감지 건수</span>
+          <p id="todayCount" style="font-size: 1.8rem; font-weight: 700; color: var(--color-primary-light);">0건</p>
+        </div>
+        <div style="border-left: 1px solid var(--color-surface-border); padding-left: 2rem;">
+          <span style="font-size: 0.9rem; color: var(--color-text-secondary);">주간 전체 감지 건수</span>
+          <p id="weekCount" style="font-size: 1.8rem; font-weight: 700; color: var(--color-success);">0건</p>
+        </div>
+      </div>
+      <div class="chart-bar" id="weeklyChart">
+        <!-- Simple bar placeholders -->
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+  <script src="device.js"></script>
+</body>
+</html>
