@@ -16,12 +16,14 @@ find_package(unofficial-uwebsockets CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(unofficial-sqlite3 CONFIG REQUIRED)
 
 # 소스 파일 목록
 add_executable(DetectionServer
     src/main.cpp
     src/DetectionService.cpp
     src/DetectionGateway.cpp
+    src/DatabaseManager.cpp
 )
 
 # 헤더 경로
@@ -34,6 +36,7 @@ target_link_libraries(DetectionServer PRIVATE
     OpenSSL::SSL
     OpenSSL::Crypto
     ZLIB::ZLIB
+    unofficial::sqlite3::sqlite3
 )
 
 # Windows에서 Winsock 링크
@@ -44,4 +47,21 @@ endif()
 # MSVC에서 소스 파일을 UTF-8로 해석하도록 지정 (한글 주석 등 멀티바이트 문자 대응)
 if(MSVC)
     target_compile_options(DetectionServer PRIVATE /utf-8)
+endif()
+
+# ─── 테스트코드 ─────────────────────────────────────────────────────────────
+add_executable(TestDatabase
+    tests/test_database.cpp
+    src/DatabaseManager.cpp
+)
+
+target_include_directories(TestDatabase PRIVATE ${CMAKE_SOURCE_DIR}/include)
+
+target_link_libraries(TestDatabase PRIVATE
+    nlohmann_json::nlohmann_json
+    unofficial::sqlite3::sqlite3
+)
+
+if(MSVC)
+    target_compile_options(TestDatabase PRIVATE /utf-8)
 endif()
