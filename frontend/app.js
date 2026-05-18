@@ -1,15 +1,15 @@
 // app.js – Simple front‑end logic for the Hazard Animal Detection UI
 
-window.mockDevices = [];
-window.mockDetectionsLog = [];
+window.devices = [];
+window.detectionsLog = [];
 
 window.initData = async function() {
   try {
     const resLogs = await fetch('http://localhost:8081/logs');
-    window.mockDetectionsLog = await resLogs.json();
+    window.detectionsLog = await resLogs.json();
     
     const resDev = await fetch('http://localhost:8081/devices');
-    window.mockDevices = await resDev.json();
+    window.devices = await resDev.json();
     
     console.log("Successfully loaded data from backend.");
   } catch (err) {
@@ -18,11 +18,11 @@ window.initData = async function() {
 };
 
 window.getDeviceStats = function(deviceId) {
-  const device = window.mockDevices.find(d => d.id === deviceId);
+  const device = window.devices.find(d => d.id === deviceId);
   if (!device) return null;
   
   const camIds = device.cameras.map(c => c.id);
-  const deviceLogs = window.mockDetectionsLog.filter(l => camIds.includes(l.camera_id));
+  const deviceLogs = window.detectionsLog.filter(l => camIds.includes(l.camera_id));
   
   const weeklyCounts = [0, 0, 0, 0, 0, 0, 0];
   if (deviceLogs.length > 0) {
@@ -87,7 +87,7 @@ function createStatusLabel(status) {
 function renderDeviceGrid() {
   const grid = document.getElementById('deviceGrid');
   grid.innerHTML = '';
-  window.mockDevices.forEach(dev => {
+  window.devices.forEach(dev => {
     const card = document.createElement('div');
     card.className = 'card';
     card.dataset.id = dev.id;
@@ -141,18 +141,39 @@ function initAddDeviceModal() {
     if (e.target === overlay) overlay.classList.remove('active');
   });
 
-  testBtn.addEventListener('click', () => {
+  testBtn.addEventListener('click', async () => {
     const ip = document.getElementById('deviceIP').value.trim();
     if (!ip) return alert('IP 주소를 입력하세요.');
-    alert(`연결 테스트 중... (IP: ${ip})`);
+    
+    const originalText = testBtn.textContent;
+    testBtn.textContent = '⏱️ 테스트 중...';
+    testBtn.disabled = true;
+    
+    try {
+      const response = await fetch(`http://localhost:8081/devices/ping/${encodeURIComponent(ip)}`);
+      const result = await response.json();
+      
+      if (result.connected) {
+        alert(`🟢 연결 성공!\n\n라즈베리파이 기기(${ip})가 백엔드 서버와 웹소켓으로 정상 연결되어 있습니다.\n\n메시지: ${result.message}`);
+      } else {
+        alert(`🔴 연결 실패\n\n라즈베리파이 기기(${ip})를 찾을 수 없습니다.\n\n기기가 켜져 있고 웹소켓 연결이 활성화되어 있는지 확인해 주세요.\n(현재 백엔드는 오프라인 기기로 간주하여 가상/Mocking 모드로 테스트합니다.)`);
+      }
+    } catch (err) {
+      console.error("Test connection failed:", err);
+      alert(`⚠️ 서버 연결 오류\n\n백엔드 서버(port 8081)가 켜져 있는지 확인해 주세요.`);
+    } finally {
+      testBtn.textContent = originalText;
+      testBtn.disabled = false;
+    }
   });
 
-  form.addEventListener('submit', e => {
+  form.addEventListener('submit', async e => {
     e.preventDefault();
     const name = document.getElementById('deviceName').value.trim();
     const ip = document.getElementById('deviceIP').value.trim();
     const os = document.getElementById('deviceOS').value.trim();
     if (!ip) return alert('IP 주소는 필수 항목입니다.');
+    
     const newDev = {
       id: Date.now(),
       name: name || ip,
@@ -160,12 +181,44 @@ function initAddDeviceModal() {
       status: 'ready',
       os: os || 'Ubuntu 22.04 LTS',
       network: '1 Gbps',
-      cameras: []
+      cameras: [
+        {
+          id: 1001,
+          name: "카메라 1 (CSI)",
+          enabled: true,
+          targets: { mouse: true, cockroach: true }
+        },
+        {
+          id: 1002,
+          name: "카메라 2 (USB)",
+          enabled: true,
+          targets: { mouse: true, cockroach: true }
+        }
+      ]
     };
-    window.mockDevices.push(newDev);
-    renderDeviceGrid();
-    overlay.classList.remove('active');
-    form.reset();
+
+    try {
+      const response = await fetch('http://localhost:8081/devices', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(newDev)
+      });
+      
+      if (response.ok) {
+        window.devices.push(newDev);
+        renderDeviceGrid();
+        overlay.classList.remove('active');
+        form.reset();
+        console.log("Device added successfully to backend.");
+      } else {
+        alert("기기 추가에 실패했습니다.");
+      }
+    } catch (err) {
+      console.error("Failed to post new device:", err);
+      alert("서버 연결 실패. C++ 서버가 작동 중인지 확인하세요.");
+    }
   });
 }
 
