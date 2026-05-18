@@ -12,7 +12,7 @@ cd vcpkg
 ./bootstrap-vcpkg.sh
 
 echo "Installing dependencies (this may take 10-20 minutes)..."
-./vcpkg install uwebsockets nlohmann-json openssl zlib
+./vcpkg install uwebsockets nlohmann-json openssl zlib sqlite3
 
 echo "Building the project..."
 cd "$PROJECT_DIR"
