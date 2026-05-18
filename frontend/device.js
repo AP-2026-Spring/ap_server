@@ -26,7 +26,7 @@ function renderCameras(device) {
   const container = document.getElementById('cameraList');
   container.innerHTML = '';
   
-  if (device.cameras.length === 0) {
+  if (!device.cameras || device.cameras.length === 0) {
     container.innerHTML = `
       <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 3rem; cursor: default;">
         <p style="color: var(--color-text-secondary); justify-content: center;">연결된 카메라가 없습니다.</p>
@@ -37,7 +37,7 @@ function renderCameras(device) {
 
   device.cameras.forEach(cam => {
     // Calculate events dynamically to match backend consistency
-    const camEvents = window.mockDetectionsLog ? window.mockDetectionsLog.filter(l => l.camera_id === cam.id).length : 0;
+    const camEvents = window.detectionsLog ? window.detectionsLog.filter(l => l.camera_id === cam.id).length : 0;
 
     const card = document.createElement('div');
     card.className = 'card camera-card';
@@ -139,11 +139,12 @@ function initBackButton() {
 window.addEventListener('DOMContentLoaded', async () => {
   await window.initData();
   const devId = parseInt(getQueryParam('deviceId')) || 1;
-  const device = window.mockDevices.find(d => d.id === devId);
+  const device = window.devices.find(d => d.id === devId);
   if (!device) {
     alert('기기를 찾을 수 없습니다.');
     return;
   }
+  
   renderHeader(device);
   renderCameras(device);
   renderStats(device);

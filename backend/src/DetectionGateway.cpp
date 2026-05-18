@@ -1,5 +1,6 @@
 #include "DetectionGateway.h"
 #include <iostream>
+#include <algorithm>
 
 DetectionGateway::DetectionGateway(DetectionService& service)
     : detectionService_(service) {}
@@ -11,8 +12,10 @@ void DetectionGateway::registerRoutes(uWS::App& app) {
     app.ws</*PerSocketData=*/int>("/detection", {
 
         // --- 연결 이벤트 ---
-        .open = [](auto* ws) {
-            std::cout << "[Gateway] 클라이언트 연결됨\n";
+        .open = [this](auto* ws) {
+            std::string_view remote_ip = ws->getRemoteAddressAsText();
+            std::cout << "[Gateway] 클라이언트 연결됨: IP = " << remote_ip << "\n";
+            clients_.push_back(ws);
         },
 
         // --- 메시지 수신: handleSignal() 에 대응 ---
@@ -54,8 +57,13 @@ void DetectionGateway::registerRoutes(uWS::App& app) {
         },
 
         // --- 연결 해제 이벤트 ---
-        .close = [](auto* ws, int code, std::string_view reason) {
-            std::cout << "[Gateway] 클라이언트 연결 해제 (code=" << code << ")\n";
+        .close = [this](auto* ws, int code, std::string_view reason) {
+            std::string_view remote_ip = ws->getRemoteAddressAsText();
+            std::cout << "[Gateway] 클라이언트 연결 해제: IP = " << remote_ip << " (code=" << code << ")\n";
+            auto it = std::find(clients_.begin(), clients_.end(), ws);
+            if (it != clients_.end()) {
+                clients_.erase(it);
+            }
         }
         
     });
@@ -203,7 +211,74 @@ app.get("/devices", [this](auto* res, auto* req) {
        ->end(detectionService_.getDevices().dump(2));
 });
 
-// CORS Preflight for POST
+// CORS Preflight for POST /devices
+app.options("/devices", [](auto* res, auto* req) {
+    res->writeHeader("Access-Control-Allow-Origin", "*")
+       ->writeHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+       ->writeHeader("Access-Control-Allow-Headers", "Content-Type")
+       ->end();
+});
+
+// HTTP POST /devices → JSON 데이터
+app.post("/devices", [this](auto* res, auto* req) {
+    res->onAborted([]() {});
+    std::string* buffer = new std::string();
+    res->onData([this, res, buffer](std::string_view data, bool isLast) {
+        buffer->append(data.data(), data.length());
+        if (isLast) {
+            try {
+                json newDevice = json::parse(*buffer);
+                detectionService_.addDevice(newDevice);
+                
+                json response = {{"success", true}};
+                res->writeHeader("Content-Type", "application/json")
+                   ->writeHeader("Access-Control-Allow-Origin", "*")
+                   ->end(response.dump());
+            } catch (...) {
+                res->writeStatus("400 Bad Request")
+                   ->writeHeader("Access-Control-Allow-Origin", "*")
+                   ->end("Invalid JSON");
+            }
+            delete buffer;
+        }
+});
+});
+
+// HTTP GET /devices/ping/:ip → 웹소켓 실시간 연결 여부 확인
+app.get("/devices/ping/:ip", [this](auto* res, auto* req) {
+    res->onAborted([]() {});
+    
+    std::string target_ip(req->getParameter(0));
+    
+    bool connected = false;
+    for (auto* client : clients_) {
+        std::string_view remote_view = client->getRemoteAddressAsText();
+        std::string remote_ip(remote_view.data(), remote_view.size());
+        
+        // IP matching: exact match or localhost/127.0.0.1 equivalents
+        bool ip_matches = (remote_ip == target_ip) ||
+                          (target_ip == "127.0.0.1" && (remote_view == "::1" || remote_view == "localhost" || remote_view == "::ffff:127.0.0.1")) ||
+                          (remote_ip == "127.0.0.1" && (target_ip == "::1" || target_ip == "localhost" || target_ip == "::ffff:127.0.0.1"));
+        
+        if (ip_matches) {
+            connected = true;
+            break;
+        }
+    }
+    
+    json response = {
+        {"connected", connected},
+        {"ip", target_ip},
+        {"message", connected ? "Device is online (WebSocket connected)" : "Device is offline (No active WebSocket connection)"}
+    };
+    
+    res->writeHeader("Content-Type", "application/json")
+       ->writeHeader("Access-Control-Allow-Origin", "*")
+       ->end(response.dump());
+});
+
+
+// CORS Preflight for POST /camera/control
 app.options("/camera/control", [](auto* res, auto* req) {
     res->writeHeader("Access-Control-Allow-Origin", "*")
        ->writeHeader("Access-Control-Allow-Methods", "POST, OPTIONS")
@@ -223,34 +298,106 @@ app.post("/camera/control", [this](auto* res, auto* req) {
             try {
                 json reqJson = json::parse(*buffer);
                 
-                // TEST MODE FLAG (In real scenario, this could be from config)
-                bool isTestMode = true; 
-                
                 int cam_id = reqJson.value("camera_id", 0);
-                std::string action = reqJson.value("action", "");
-                bool enabled = (action == "ON" || reqJson.value("enabled", false));
+                std::string raw_action = reqJson.value("action", "");
+                bool enabled = (raw_action == "ON" || raw_action.find("ON") != std::string::npos || reqJson.value("enabled", false));
+                std::string action = enabled ? "ON" : "OFF";
+                std::string target_ip = reqJson.value("target_ip", "");
                 
-                if (isTestMode) {
-                    std::cout << "[Test Mode] Mocking Raspberry Pi WebSocket signal (In-Memory)\n";
-                    std::cout << "[Test Mode] Payload: " << reqJson.dump() << "\n";
+                bool sent_to_live = false;
+                for (auto* client : clients_) {
+                    std::string_view remote_view = client->getRemoteAddressAsText();
+                    std::string remote_ip(remote_view.data(), remote_view.size());
                     
-                    // Actually update the in-memory mock device state!
-                    detectionService_.updateMockCameraState(cam_id, enabled);
+                    // IP matching: exact match or localhost/127.0.0.1 equivalents
+                    bool ip_matches = (remote_ip == target_ip) ||
+                                      (target_ip == "127.0.0.1" && (remote_ip == "::1" || remote_ip == "localhost" || remote_ip == "::ffff:127.0.0.1")) ||
+                                      (remote_ip == "127.0.0.1" && (target_ip == "::1" || target_ip == "localhost" || target_ip == "::ffff:127.0.0.1"));
                     
-                    json response = {{"success", true}, {"mocked", true}, {"message", "Mocked Raspberry Pi WebSocket signal"}};
-                    res->writeHeader("Content-Type", "application/json")
-                       ->writeHeader("Access-Control-Allow-Origin", "*")
-                       ->end(response.dump());
-                } else {
-                    // Send to actual WebSocket (Not fully implemented here, would need to find the correct ws client)
-                    std::cout << "[Live Mode] Should send to Raspberry Pi WebSocket: " << reqJson.dump() << "\n";
-                    
-                    json response = {{"success", true}, {"mocked", false}, {"message", "Sent to Raspberry Pi"}};
-                    res->writeHeader("Content-Type", "application/json")
-                       ->writeHeader("Access-Control-Allow-Origin", "*")
-                       ->end(response.dump());
+                    if (ip_matches) {
+                        std::cout << "[Live Mode] Sending " << action << " command (camera_id: " << cam_id << ") to device at " << remote_ip << "\n";
+                        json payload = {
+                            {"action", action},
+                            {"camera_id", cam_id}
+                        };
+                        client->send(payload.dump(), uWS::OpCode::TEXT);
+                        sent_to_live = true;
+                    }
                 }
+                
+                // Fallback: broadcast to all connected WebSocket clients if target_ip is empty or not matched
+                if (!sent_to_live && !clients_.empty()) {
+                    std::cout << "[Live Mode] No exact IP match found for target '" << target_ip << "'. Broadcasting " << action << " (camera_id: " << cam_id << ") to all connected devices.\n";
+                    for (auto* client : clients_) {
+                        json payload = {
+                            {"action", action},
+                            {"camera_id", cam_id}
+                        };
+                        client->send(payload.dump(), uWS::OpCode::TEXT);
+                    }
+                    sent_to_live = true;
+                }
+
+                // Always update the mock state in-memory so both UI and server-state remain in sync!
+                detectionService_.updateMockCameraState(cam_id, enabled);
+
+                json response;
+                if (sent_to_live) {
+                    response = {
+                        {"success", true},
+                        {"mocked", false},
+                        {"message", "Sent to live Raspberry Pi client"}
+                    };
+                } else {
+                    std::cout << "[Test Mode] No live WebSocket clients available. Falling back to Mocking (In-Memory).\n";
+                    response = {
+                        {"success", true},
+                        {"mocked", true},
+                        {"message", "Mocked Raspberry Pi WebSocket signal (No live clients)"}
+                    };
+                }
+
+                res->writeHeader("Content-Type", "application/json")
+                   ->writeHeader("Access-Control-Allow-Origin", "*")
+                   ->end(response.dump());
             } catch (const std::exception& e) {
+                res->writeStatus("400 Bad Request")
+                   ->writeHeader("Access-Control-Allow-Origin", "*")
+                   ->end("Invalid JSON");
+            }
+            delete buffer;
+        }
+    });
+});
+
+// CORS Preflight for POST /camera/targets
+app.options("/camera/targets", [](auto* res, auto* req) {
+    res->writeHeader("Access-Control-Allow-Origin", "*")
+       ->writeHeader("Access-Control-Allow-Methods", "POST, OPTIONS")
+       ->writeHeader("Access-Control-Allow-Headers", "Content-Type")
+       ->end();
+});
+
+// HTTP POST /camera/targets → Update rodent/insect filters
+app.post("/camera/targets", [this](auto* res, auto* req) {
+    res->onAborted([]() {});
+    std::string* buffer = new std::string();
+    res->onData([this, res, buffer](std::string_view data, bool isLast) {
+        buffer->append(data.data(), data.length());
+        if (isLast) {
+            try {
+                json reqJson = json::parse(*buffer);
+                int cam_id = reqJson.value("camera_id", 0);
+                bool mouse = reqJson.value("mouse", true);
+                bool cockroach = reqJson.value("cockroach", true);
+                
+                detectionService_.updateCameraTargets(cam_id, mouse, cockroach);
+                
+                json response = {{"success", true}};
+                res->writeHeader("Content-Type", "application/json")
+                   ->writeHeader("Access-Control-Allow-Origin", "*")
+                   ->end(response.dump());
+            } catch (...) {
                 res->writeStatus("400 Bad Request")
                    ->writeHeader("Access-Control-Allow-Origin", "*")
                    ->end("Invalid JSON");
