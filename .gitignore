@@ -126,3 +126,6 @@ x86/
 
 # Build directory
 build/
+
+# Log files
+*.log
