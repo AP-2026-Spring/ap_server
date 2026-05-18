@@ -36,19 +36,35 @@ window.getDeviceStats = function(deviceId) {
   };
 };
 
-window.signalRaspberryPiSharedFile = function(ip, action, payload) {
+window.signalRaspberryPiSharedFile = async function(ip, action, payload) {
   const timestamp = new Date().toLocaleTimeString();
   
   console.log(`[${timestamp}] 📡 [신호 전송] ${ip} 기기로 카메라 전원 제어 명령을 보냅니다... (${action})`);
   
-  setTimeout(() => {
-    const formattedPayload = JSON.stringify(payload, null, 2);
-    console.log(`[${new Date().toLocaleTimeString()}] 💾 [공유 파일 수정] Pi 내의 sharedfile에 설정을 기록했습니다:\n${formattedPayload}`);
+  try {
+    const response = await fetch('http://localhost:8081/camera/control', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        camera_id: payload.camera_id,
+        action: action,
+        enabled: payload.enabled,
+        target_ip: ip
+      })
+    });
     
-    setTimeout(() => {
-      console.log(`[${new Date().toLocaleTimeString()}] 🟢 [동기화 완료] ${ip} 카메라 전원 동기화 완료.`);
-    }, 800);
-  }, 600);
+    const result = await response.json();
+    
+    if (result.mocked) {
+      console.log(`[${new Date().toLocaleTimeString()}] 🟢 [테스트 모드] 인메모리에서 라즈베리파이 웹소켓 통신을 성공적으로 목킹했습니다.`);
+    } else {
+      console.log(`[${new Date().toLocaleTimeString()}] 🟢 [라이브 모드] 실제 라즈베리파이로 웹소켓 신호가 전송되었습니다.`);
+    }
+  } catch (err) {
+    console.error("Failed to send camera control signal:", err);
+  }
 };
 
 /** Utility to create a status label */
@@ -71,7 +87,7 @@ function createStatusLabel(status) {
 function renderDeviceGrid() {
   const grid = document.getElementById('deviceGrid');
   grid.innerHTML = '';
-  mockDevices.forEach(dev => {
+  window.mockDevices.forEach(dev => {
     const card = document.createElement('div');
     card.className = 'card';
     card.dataset.id = dev.id;
@@ -146,7 +162,7 @@ function initAddDeviceModal() {
       network: '1 Gbps',
       cameras: []
     };
-    mockDevices.push(newDev);
+    window.mockDevices.push(newDev);
     renderDeviceGrid();
     overlay.classList.remove('active');
     form.reset();

@@ -1,7 +1,5 @@
 // device.js – Logic for individual device management page
 
-const mockDevices = window.mockDevices;
-
 /** Helper to read query param */
 function getQueryParam(name) {
   const params = new URLSearchParams(window.location.search);
@@ -141,7 +139,7 @@ function initBackButton() {
 window.addEventListener('DOMContentLoaded', async () => {
   await window.initData();
   const devId = parseInt(getQueryParam('deviceId')) || 1;
-  const device = mockDevices.find(d => d.id === devId);
+  const device = window.mockDevices.find(d => d.id === devId);
   if (!device) {
     alert('기기를 찾을 수 없습니다.');
     return;

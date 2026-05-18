@@ -22,20 +22,9 @@ DetectionService::DetectionService() {
     } else {
         seedMockData();
     }
-}
 
-void DetectionService::seedMockData() {
-    auto logs = dbManager_->getAllDetections();
-    if (logs.empty()) {
-        std::cout << "[Server] Database is empty. Seeding mock data...\n";
-        dbManager_->saveDetection(101, "mouse", 0.92, 120.5, 85.0, 40.0, 25.0, "2026-05-18 14:15:22", "snapshot.png");
-        dbManager_->saveDetection(101, "mouse", 0.88, 150.0, 90.0, 38.0, 22.0, "2026-05-18 10:05:11", "");
-        dbManager_->saveDetection(101, "cockroach", 0.75, 200.0, 200.0, 10.0, 10.0, "2026-05-17 22:30:00", "");
-    }
-}
-
-json DetectionService::getDevices() const {
-    return {
+    // Initialize mock devices state
+    mockDevices_ = {
         {
             {"id", 1},
             {"name", "메인 서버(주방)"},
@@ -68,6 +57,36 @@ json DetectionService::getDevices() const {
             {"cameras", json::array()}
         }
     };
+}
+
+void DetectionService::seedMockData() {
+    auto logs = dbManager_->getAllDetections();
+    if (logs.empty()) {
+        std::cout << "[Server] Database is empty. Seeding mock data...\n";
+        dbManager_->saveDetection(101, "mouse", 0.92, 120.5, 85.0, 40.0, 25.0, "2026-05-18 14:15:22", "snapshot.png");
+        dbManager_->saveDetection(101, "mouse", 0.88, 150.0, 90.0, 38.0, 22.0, "2026-05-18 10:05:11", "");
+        dbManager_->saveDetection(101, "cockroach", 0.75, 200.0, 200.0, 10.0, 10.0, "2026-05-17 22:30:00", "");
+    }
+}
+
+json DetectionService::getDevices() const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return mockDevices_;
+}
+
+void DetectionService::updateMockCameraState(int camera_id, bool enabled) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto& device : mockDevices_) {
+        if (device.contains("cameras")) {
+            for (auto& cam : device["cameras"]) {
+                if (cam["id"] == camera_id) {
+                    cam["enabled"] = enabled;
+                    std::cout << "[Test Mode] Camera " << camera_id << " power state changed to " << (enabled ? "ON" : "OFF") << " in memory.\n";
+                    return;
+                }
+            }
+        }
+    }
 }
 
 // saveDetection(data) 에 대응

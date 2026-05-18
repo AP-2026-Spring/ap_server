@@ -1,7 +1,5 @@
 // camera.js – Logic for individual camera detailed view page
 
-const mockDevices = window.mockDevices;
-
 function getQueryParam(name) {
   const params = new URLSearchParams(window.location.search);
   return params.get(name);
@@ -12,7 +10,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const devId = parseInt(getQueryParam('deviceId')) || 1;
   const camId = parseInt(getQueryParam('cameraId')) || 101;
 
-  const device = mockDevices.find(d => d.id === devId);
+  const device = window.mockDevices.find(d => d.id === devId);
   if (!device) {
     alert('기기를 찾을 수 없습니다.');
     return;
