@@ -2,9 +2,15 @@
 #include "DetectionService.h"
 #include <iostream>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 // Nest.js의 main.ts (bootstrap 함수) 에 대응
 int main() {
+#ifdef _WIN32
     SetConsoleOutputCP(CP_UTF8);
+#endif
     // 1. 서비스 생성 (NestFactory + DI 컨테이너 역할)
     DetectionService detectionService;
 
