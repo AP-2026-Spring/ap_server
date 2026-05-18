@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
+
 echo "Starting vcpkg setup..."
 cd ~
 if [ ! -d "vcpkg" ]; then
@@ -13,7 +15,7 @@ echo "Installing dependencies (this may take 10-20 minutes)..."
 ./vcpkg install uwebsockets nlohmann-json openssl zlib
 
 echo "Building the project..."
-cd /mnt/d/Univ/4-2/adv/ap_server
+cd "$PROJECT_DIR"
 rm -rf build
 mkdir build
 cd build
