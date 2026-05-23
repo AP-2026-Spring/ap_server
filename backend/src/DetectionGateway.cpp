@@ -109,6 +109,7 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 4px; }
 .bar-fill { height: 6px; background: #1D9E75; border-radius: 99px; }
 .badge { display: inline-block; padding: 2px 8px; border-radius: 6px; font-size: 12px; }
 .badge-red { background: #FCEBEB; color: #A32D2D; }
+.badge-green { background: #E6FCEF; color: #15803D; }
 .badge-blue { background: #E6F1FB; color: #185FA5; }
 .badge-amber { background: #FAEEDA; color: #854F0B; }
 .badge-gray { background: #f0f0f0; color: #555; }
@@ -152,11 +153,13 @@ td { padding: 8px; border-bottom: 1px solid #eee; }
 </div>
 
 <script>
-const BADGE = { mouse:'badge-red', cockroach:'badge-blue', rat:'badge-amber' };
-const DOT = { mouse:'#E24B4A', cockroach:'#378ADD', rat:'#BA7517' };
+const BADGE = { mouse:'badge-red', cockroach:'badge-green', rat:'badge-amber' };
+const DOT = { mouse:'#E24B4A', cockroach:'#22C55E', rat:'#BA7517' };
+const TRANSLATIONS = { mouse: '쥐', cockroach: '바퀴벌레', rat: '쥐' };
 
 function badgeClass(cls) { return BADGE[cls] || 'badge-gray'; }
 function dotColor(cls) { return DOT[cls] || '#888'; }
+function translateClass(cls) { return TRANSLATIONS[cls] || cls; }
 
 async function load() {
   const res = await fetch('/logs');
@@ -185,7 +188,7 @@ async function load() {
 
   document.getElementById('class-list').innerHTML = Object.entries(classCount).map(([cls, cnt]) => `
     <div class="class-row">
-      <span><span class="dot" style="background:${dotColor(cls)}"></span>${cls}</span>
+      <span><span class="dot" style="background:${dotColor(cls)}"></span>${translateClass(cls)}</span>
       <span class="count-badge">${cnt}건</span>
     </div>`).join('');
 
@@ -193,7 +196,7 @@ async function load() {
     <tr>
       <td>${l.id}</td>
       <td>${l.camera_id}</td>
-      <td><span class="badge ${badgeClass(l.class)}">${l.class}</span></td>
+      <td><span class="badge ${badgeClass(l.class)}">${translateClass(l.class)}</span></td>
       <td>${Math.round(l.confidence * 100)}%</td>
       <td>${new Date(l.timestamp).toLocaleString('ko-KR')}</td>
     </tr>`).join('');
