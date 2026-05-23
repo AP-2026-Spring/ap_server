@@ -37,8 +37,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Set snapshot image & info
   const snapshotImg = document.getElementById('snapshotImg');
   const snapshotInfo = document.getElementById('snapshotInfo');
-  const recentEventText = document.getElementById('recentEvent');
-  
+
   function updateStreamDisplay() {
     if (camera.enabled) {
       // 192.168.0.12:8080/stream is the live MJPEG streaming URL from the Raspberry Pi!
@@ -59,20 +58,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   updateStreamDisplay();
 
-  if (latestLog) {
-    const classNameKr = latestLog.class_name === 'mouse' ? '쥐' : (latestLog.class_name === 'cockroach' ? '바퀴벌레' : latestLog.class_name);
-    recentEventText.textContent = `${classNameKr} 감지 (${Math.round(latestLog.confidence * 100)}% 신뢰도) - ${latestLog.timestamp}`;
-  } else {
-    recentEventText.textContent = "없음";
-  }
-
-  // Detection target toggle setup
-  const detectMouse = document.getElementById('detectMouse');
-  const detectCockroach = document.getElementById('detectCockroach');
-
-  detectMouse.checked = camera.targets.mouse;
-  detectCockroach.checked = camera.targets.cockroach;
-
   function syncPiPowerConfig(action) {
     // Only manage camera power/usage through shared file as requested
     const payload = {
@@ -89,37 +74,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     camera.enabled = e.target.checked;
     syncPiPowerConfig(camera.enabled ? '카메라 사용 설정(ON)' : '카메라 사용 해제(OFF)');
     updateStreamDisplay();
-  });
-
-  async function syncCameraTargets() {
-    try {
-      await fetch('http://localhost:8081/camera/targets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          camera_id: camera.id,
-          mouse: camera.targets.mouse,
-          cockroach: camera.targets.cockroach
-        })
-      });
-      console.log(`[서버 동기화] 탐지 타겟 설정이 서버와 동기화되었습니다.`);
-    } catch (err) {
-      console.error("Failed to sync camera targets:", err);
-    }
-  }
-
-  detectMouse.addEventListener('change', async (e) => {
-    camera.targets.mouse = e.target.checked;
-    console.log(`[로컬 설정] 쥐 탐지 필터가 ${e.target.checked ? '활성화' : '비활성화'} 되었습니다.`);
-    await syncCameraTargets();
-  });
-
-  detectCockroach.addEventListener('change', async (e) => {
-    camera.targets.cockroach = e.target.checked;
-    console.log(`[로컬 설정] 바퀴벌레 탐지 필터가 ${e.target.checked ? '활성화' : '비활성화'} 되었습니다.`);
-    await syncCameraTargets();
   });
 
   // Render weekly stats chart (7 days)
