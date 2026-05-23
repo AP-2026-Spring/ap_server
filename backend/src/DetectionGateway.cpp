@@ -211,6 +211,31 @@ app.get("/devices", [this](auto* res, auto* req) {
        ->end(detectionService_.getDevices().dump(2));
 });
 
+// CORS Preflight for DELETE /devices/:id
+app.options("/devices/:id", [](auto* res, auto* req) {
+    res->writeHeader("Access-Control-Allow-Origin", "*")
+       ->writeHeader("Access-Control-Allow-Methods", "DELETE, OPTIONS")
+       ->writeHeader("Access-Control-Allow-Headers", "Content-Type")
+       ->end();
+});
+
+// HTTP DELETE /devices/:id → 기기 삭제
+app.del("/devices/:id", [this](auto* res, auto* req) {
+    std::string id_str(req->getParameter(0));
+    bool success = false;
+    try {
+        uint64_t device_id = std::stoull(id_str);
+        success = detectionService_.removeDevice(device_id);
+    } catch (const std::exception& e) {
+        std::cerr << "[Gateway] Failed to parse device ID: " << id_str << ", error: " << e.what() << "\n";
+    }
+
+    json response = {{"success", success}};
+    res->writeHeader("Content-Type", "application/json")
+       ->writeHeader("Access-Control-Allow-Origin", "*")
+       ->end(response.dump());
+});
+
 // CORS Preflight for POST /devices
 app.options("/devices", [](auto* res, auto* req) {
     res->writeHeader("Access-Control-Allow-Origin", "*")

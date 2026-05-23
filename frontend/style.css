@@ -441,3 +441,160 @@ body {
   100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
 }
 
+/* Card Settings Cog & Dropdown */
+.card-settings-container {
+  position: relative;
+  z-index: 10;
+}
+
+.settings-cog {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: all var(--transition-fast);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-cog:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  transform: scale(1.08);
+}
+
+.settings-cog:active {
+  transform: scale(0.95);
+}
+
+.settings-dropdown {
+  position: absolute;
+  right: 0;
+  top: 42px;
+  background: rgba(15, 14, 23, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(244, 63, 94, 0.05);
+  min-width: 150px;
+  padding: 6px;
+  z-index: 100;
+  display: none;
+  transform-origin: top right;
+  animation: dropdownFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.settings-dropdown.active {
+  display: block;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.dropdown-item {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all var(--transition-fast);
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dropdown-item.delete-btn {
+  color: #fb7185; /* Light red/rose */
+}
+
+.dropdown-item.delete-btn:hover {
+  background: rgba(244, 63, 94, 0.15);
+  color: #fda4af;
+}
+
+/* Device Detailed Page - Delete Button */
+.delete-device-btn {
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  color: #fb7185;
+  padding: 0.5rem 1.2rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.delete-device-btn:hover {
+  background: rgba(244, 63, 94, 0.2);
+  border-color: rgba(244, 63, 94, 0.5);
+  color: #fda4af;
+  box-shadow: 0 0 15px rgba(244, 63, 94, 0.25);
+  transform: translateY(-1px);
+}
+
+.delete-device-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.settings-cog:hover .settings-svg {
+  transform: rotate(45deg);
+  color: #fff;
+}
+
+.settings-svg {
+  transition: transform var(--transition-normal), color var(--transition-fast);
+}
+
+/* Direct Delete Button on Card */
+.delete-card-btn {
+  background: rgba(244, 63, 94, 0.1);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+  color: #fb7185;
+  border-radius: 50%;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.delete-card-btn:hover {
+  background: rgba(244, 63, 94, 0.25);
+  border-color: rgba(244, 63, 94, 0.5);
+  color: #fda4af;
+  transform: scale(1.08);
+  box-shadow: 0 0 10px rgba(244, 63, 94, 0.2);
+}
+
+.delete-card-btn:active {
+  transform: scale(0.95);
+}
+

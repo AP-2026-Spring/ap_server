@@ -119,6 +119,28 @@ void DetectionService::addDevice(const json& device) {
     mockDevices_.push_back(newDev);
 }
 
+bool DetectionService::removeDevice(uint64_t device_id) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto it = mockDevices_.begin(); it != mockDevices_.end(); ++it) {
+        if (it->contains("id")) {
+            uint64_t current_id = 0;
+            if (it->at("id").is_number()) {
+                current_id = it->at("id").get<uint64_t>();
+            } else if (it->at("id").is_string()) {
+                try {
+                    current_id = std::stoull(it->at("id").get<std::string>());
+                } catch (...) {}
+            }
+            if (current_id == device_id) {
+                std::cout << "[Server] Deleting device ID: " << device_id << "\n";
+                mockDevices_.erase(it);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 void DetectionService::updateMockCameraState(int camera_id, bool enabled) {
     std::lock_guard<std::mutex> lock(mutex_);
     for (auto& device : mockDevices_) {

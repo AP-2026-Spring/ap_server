@@ -24,6 +24,9 @@ public:
     // 기기 동적 등록
     void addDevice(const json& device);
 
+    // 기기 삭제
+    bool removeDevice(uint64_t device_id);
+
     // 모의 카메라 상태 업데이트 (Test Mode)
     void updateMockCameraState(int camera_id, bool enabled);
 

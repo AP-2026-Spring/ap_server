@@ -136,6 +136,38 @@ function initBackButton() {
   });
 }
 
+/** Delete button handling */
+function initDeleteButton(device) {
+  const deleteBtn = document.getElementById('deleteDeviceBtn');
+  if (!deleteBtn) return;
+  
+  deleteBtn.addEventListener('click', async () => {
+    const confirmDelete = confirm(`⚠️ 기기 삭제 경고\n\n정말로 이 기기를 삭제하시겠습니까?\n\n기기명: ${device.name || device.ip}\nIP 주소: ${device.ip}`);
+    if (!confirmDelete) return;
+
+    try {
+      const response = await fetch(`http://localhost:8081/devices/${device.id}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          alert('기기가 성공적으로 삭제되었습니다.');
+          location.href = 'index.html';
+        } else {
+          alert('기기 삭제에 실패했습니다. (서버 처리 오류)');
+        }
+      } else {
+        alert('기기 삭제 중 통신 에러가 발생했습니다.');
+      }
+    } catch (err) {
+      console.error("Failed to delete device:", err);
+      alert('서버 연결 실패. 백엔드 서버가 작동 중인지 확인하세요.');
+    }
+  });
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
   await window.initData();
   const devId = parseInt(getQueryParam('deviceId')) || 1;
@@ -149,4 +181,5 @@ window.addEventListener('DOMContentLoaded', async () => {
   renderCameras(device);
   renderStats(device);
   initBackButton();
+  initDeleteButton(device);
 });

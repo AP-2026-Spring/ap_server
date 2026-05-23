@@ -94,10 +94,12 @@ function renderDeviceGrid() {
     card.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
         <h3 style="font-size: 1.2rem; font-weight: 600; color: #fff; margin: 0;">${dev.name || dev.ip}</h3>
-        <button class="settings-cog" style="background: none; border: none; cursor: pointer; color: var(--color-text-secondary); transition: var(--transition-fast); padding: 4px; display: flex; align-items: center; justify-content: center;" title="설정 관리">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="settings-svg">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        <button class="delete-card-btn" title="기기 삭제">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            <line x1="10" y1="11" x2="10" y2="17"></line>
+            <line x1="14" y1="11" x2="14" y2="17"></line>
           </svg>
         </button>
       </div>
@@ -110,19 +112,47 @@ function renderDeviceGrid() {
     `;
     card.appendChild(createStatusLabel(dev.status));
     
-    // Add CSS rotator styling dynamically for ease
-    const cog = card.querySelector('.settings-cog');
-    cog.addEventListener('mouseover', () => {
-      cog.querySelector('.settings-svg').style.transform = 'rotate(45deg)';
-      cog.querySelector('.settings-svg').style.color = '#fff';
-    });
-    cog.addEventListener('mouseout', () => {
-      cog.querySelector('.settings-svg').style.transform = 'rotate(0deg)';
-      cog.querySelector('.settings-svg').style.color = 'var(--color-text-secondary)';
+    const deleteBtn = card.querySelector('.delete-card-btn');
+
+    // Delete device action
+    deleteBtn.addEventListener('click', async (e) => {
+      e.stopPropagation(); // Prevents card navigation to device.html
+
+      const confirmDelete = confirm(`⚠️ 기기 삭제 경고\n\n정말로 이 기기를 삭제하시겠습니까?\n\n기기명: ${dev.name || dev.ip}\nIP 주소: ${dev.ip}`);
+      if (!confirmDelete) return;
+
+      try {
+        const response = await fetch(`http://localhost:8081/devices/${dev.id}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            // Remove device from local state
+            window.devices = window.devices.filter(d => d.id !== dev.id);
+            // Premium scale and fade-out animation
+            card.style.transition = 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease';
+            card.style.transform = 'scale(0.9) translateY(10px)';
+            card.style.opacity = '0';
+            setTimeout(() => {
+              renderDeviceGrid();
+            }, 400);
+            console.log(`Device ID ${dev.id} successfully deleted.`);
+          } else {
+            alert('기기 삭제에 실패했습니다. (서버 처리 오류)');
+          }
+        } else {
+          alert('기기 삭제 중 통신 에러가 발생했습니다.');
+        }
+      } catch (err) {
+        console.error("Failed to delete device:", err);
+        alert('서버 연결 실패. 백엔드 서버가 작동 중인지 확인하세요.');
+      }
     });
 
     card.addEventListener('click', () => {
-      // Navigates when card is clicked
+      // Navigates when card itself is clicked
       location.href = `device.html?deviceId=${dev.id}`;
     });
     grid.appendChild(card);
