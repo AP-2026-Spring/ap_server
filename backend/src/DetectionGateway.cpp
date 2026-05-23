@@ -2,6 +2,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include <random>
+
 DetectionGateway::DetectionGateway(DetectionService& service)
     : detectionService_(service) {}
 
@@ -27,6 +29,17 @@ void DetectionGateway::registerRoutes(uWS::App& app) {
             try {
                 // 수신한 JSON 파싱
                 json data = json::parse(message);
+
+                // 만약 시스템 리소스 상태 통계 데이터라면 다른 연결된 웹 브라우저 대시보드로 브로드캐스트 전달
+                if (data.contains("type") && data["type"] == "resource_stats") {
+                    std::string payload = data.dump();
+                    for (auto* client : clients_) {
+                        if (client != ws) {
+                            client->send(payload, uWS::OpCode::TEXT);
+                        }
+                    }
+                    return;
+                }
 
                 std::cout << "Received signal from client: " << data.dump() << "\n";
 

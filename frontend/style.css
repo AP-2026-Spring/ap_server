@@ -598,3 +598,125 @@ body {
   transform: scale(0.95);
 }
 
+/* Resource Grid & Dashboard Monitor */
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+@media (max-width: 768px) {
+  .resource-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.resource-card {
+  padding: 1.25rem;
+  cursor: default;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.resource-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.resource-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cpu-icon {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.ram-icon {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+}
+
+.power-icon {
+  background: rgba(234, 179, 8, 0.15);
+  color: #facc15;
+}
+
+.temp-icon {
+  background: rgba(244, 63, 94, 0.15);
+  color: #fb7185;
+}
+
+.resource-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.resource-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.resource-value-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.resource-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.resource-subtitle {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cpu-bar {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+.ram-bar {
+  background: linear-gradient(90deg, #a855f7, #c084fc);
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
+}
+
+.power-bar {
+  background: linear-gradient(90deg, #eab308, #facc15);
+  box-shadow: 0 0 8px rgba(234, 179, 8, 0.4);
+}
+
+.temp-bar {
+  background: linear-gradient(90deg, #f43f5e, #fb7185);
+  box-shadow: 0 0 8px rgba(244, 63, 94, 0.4);
+}
+
