@@ -179,13 +179,13 @@ function initCharts() {
     temp: { id: 'tempChart', label: '코어 온도 (°C)', color: '#fb7185', gradientColor: 'rgba(244, 63, 94, 0.2)', min: 20, max: 80 }
   };
 
-  // Generate 30 initial labels representing 1 minute rolling history (2-second interval)
-  const initialLabels = Array.from({ length: 30 }, (_, i) => {
-    const secAgo = 60 - Math.round((i / 29) * 60);
-    return secAgo === 0 ? '현재' : `-${secAgo}초`;
+  // Generate 300 initial labels representing 10 minutes rolling history (2-second interval)
+  const initialLabels = Array.from({ length: 300 }, (_, i) => {
+    const minAgo = 10 - Math.round((i / 299) * 10);
+    return minAgo === 0 ? '현재' : `-${minAgo}분`;
   });
 
-  const initialData = Array.from({ length: 30 }, () => null);
+  const initialData = Array.from({ length: 300 }, () => null);
 
   Object.entries(chartConfigs).forEach(([key, conf]) => {
     const el = document.getElementById(conf.id);
@@ -239,12 +239,12 @@ function initCharts() {
               color: '#64748b',
               font: { size: 9 },
               maxRotation: 0,
-              maxTicksLimit: 7, // clean spacing for exactly 1 minute ticks
+              maxTicksLimit: 11, // clean spacing for exactly 10 minutes interval marks
               callback: function(val, index) {
-                // Display tick every 5 points (10 seconds)
-                if (index % 5 === 0) {
-                  const secAgo = 60 - Math.round(index * 2);
-                  return secAgo === 0 ? '현재' : `-${secAgo}초`;
+                // Display tick every 30 points (1 minute)
+                if (index % 30 === 0) {
+                  const minAgo = 10 - Math.round(index / 30);
+                  return minAgo === 0 ? '현재' : `-${minAgo}분`;
                 }
                 return '';
               }
@@ -266,14 +266,14 @@ function initCharts() {
   });
 }
 
-/** Update rolling 1 minute timeline datasets for the Chart.js instance */
+/** Update rolling 10 minutes timeline datasets for the Chart.js instance */
 function updateChartData(chartKey, val) {
   const chart = charts[chartKey];
   if (!chart) return;
   
   const dataset = chart.data.datasets[0];
   dataset.data.push(val);
-  if (dataset.data.length > 30) {
+  if (dataset.data.length > 300) {
     dataset.data.shift();
   }
   
