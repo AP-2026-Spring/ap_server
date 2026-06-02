@@ -21,46 +21,15 @@
   </header>
 
   <main class="container">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
-      <!-- Snapshot viewer (Left Column) -->
+    <div style="margin-bottom: 2rem;">
+      <!-- Snapshot viewer -->
       <section class="card" style="cursor: default; margin: 0; padding: 1.5rem;">
-        <h3 style="font-size: 1.2rem; font-weight: 600; color: #fff; margin-bottom: 1rem;">실시간 감지 스냅샷 (Static Snapshot)</h3>
+        <h3 style="font-size: 1.2rem; font-weight: 600; color: #fff; margin-bottom: 1rem;">실시간 비디오 스트리밍 (Live Video Stream)</h3>
         <div style="position: relative; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--color-surface-border); box-shadow: 0 8px 24px rgba(0,0,0,0.5);">
           <img id="snapshotImg" src="" alt="Detection snapshot" style="width: 100%; display: block;" />
         </div>
         <p id="snapshotInfo" class="mt-1" style="font-size: 0.95rem; line-height: 1.5; color: var(--color-text-primary);"></p>
       </section>
-
-      <!-- Info & settings panel (Right Column) -->
-      <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-        <!-- Recent Event Card -->
-        <section class="card" style="cursor: default; margin: 0;">
-          <h3 style="font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 0.8rem;">최근 감지 이벤트</h3>
-          <p id="recentEvent" style="font-size: 1rem; color: var(--color-danger); font-weight: 500;">-</p>
-        </section>
-
-        <!-- Target Configuration Card -->
-        <section class="card" style="cursor: default; margin: 0;">
-          <h3 style="font-size: 1.1rem; font-weight: 600; color: #fff; margin-bottom: 1rem;">탐지 대상 설정 (필터링)</h3>
-          <div style="display: flex; flex-direction: column; gap: 1rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between;">
-              <span style="font-size: 0.95rem; color: var(--color-text-primary);">쥐 감지 활성화</span>
-              <label class="toggle">
-                <input type="checkbox" id="detectMouse" checked />
-                <span class="slider"></span>
-              </label>
-            </div>
-            <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--color-surface-border); padding-top: 1rem;">
-              <span style="font-size: 0.95rem; color: var(--color-text-primary);">바퀴벌레 감지 활성화</span>
-              <label class="toggle">
-                <input type="checkbox" id="detectCockroach" />
-                <span class="slider"></span>
-              </label>
-            </div>
-          </div>
-        </section>
-
-      </div>
     </div>
 
     <!-- Weekly chart -->
@@ -70,7 +39,7 @@
     </section>
   </main>
 
-  <script src="app.js"></script>
-  <script src="camera.js"></script>
+  <script src="app.js?v=2.2"></script>
+  <script src="camera.js?v=2.2"></script>
 </body>
 </html>

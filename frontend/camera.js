@@ -10,7 +10,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   const devId = parseInt(getQueryParam('deviceId')) || 1;
   const camId = parseInt(getQueryParam('cameraId')) || 101;
 
-  const device = window.mockDevices.find(d => d.id === devId);
+  const device = window.devices.find(d => d.id === devId);
   if (!device) {
     alert('기기를 찾을 수 없습니다.');
     return;
@@ -31,34 +31,32 @@ window.addEventListener('DOMContentLoaded', async () => {
   powerToggle.checked = camera.enabled;
 
   // Get logs dynamically from the backend-aligned mock database
-  const cameraLogs = window.mockDetectionsLog ? window.mockDetectionsLog.filter(l => l.camera_id === camera.id) : [];
+  const cameraLogs = window.detectionsLog ? window.detectionsLog.filter(l => l.camera_id === camera.id) : [];
   const latestLog = cameraLogs.length > 0 ? cameraLogs[0] : null;
 
   // Set snapshot image & info
   const snapshotImg = document.getElementById('snapshotImg');
   const snapshotInfo = document.getElementById('snapshotInfo');
-  const recentEventText = document.getElementById('recentEvent');
-  
-  if (latestLog) {
-    const classNameKr = latestLog.class_name === 'mouse' ? '쥐' : (latestLog.class_name === 'cockroach' ? '바퀴벌레' : latestLog.class_name);
-    
-    snapshotImg.src = latestLog.image_data || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=600&auto=format&fit=crop&q=60';
-    snapshotInfo.innerHTML = `<strong>감지 객체:</strong> ${classNameKr} (${Math.round(latestLog.confidence * 100)}% 신뢰도) <br> <span style="color: var(--color-text-secondary); font-size: 0.85rem;">타임스탬프: ${latestLog.timestamp}</span>`;
-    
-    recentEventText.textContent = `${classNameKr} 감지 (${Math.round(latestLog.confidence * 100)}% 신뢰도) - ${latestLog.timestamp}`;
-  } else {
-    // Placeholder image for empty camera
-    snapshotImg.src = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=600&auto=format&fit=crop&q=60';
-    snapshotInfo.innerHTML = `이벤트가 감지되지 않았습니다.`;
-    recentEventText.textContent = "없음";
+
+  function updateStreamDisplay() {
+    if (camera.enabled) {
+      // 192.168.0.12:8080/stream is the live MJPEG streaming URL from the Raspberry Pi!
+      const camIdx = camera.id - 1001; // 1001 -> 0, 1002 -> 1
+      snapshotImg.src = `http://${device.ip}:8080/stream?cam=${camIdx}`;
+      snapshotInfo.innerHTML = `<span style="display: inline-block; padding: 2px 6px; background: var(--color-success); color: #fff; font-size: 0.75rem; font-weight: bold; border-radius: 4px; margin-right: 6px;">LIVE</span> <strong>실시간 비디오 스트리밍 중</strong> (${device.ip}:8080/stream?cam=${camIdx})`;
+    } else {
+      if (latestLog) {
+        snapshotImg.src = latestLog.image_data || 'https://images.unsplash.com/photo-1557683316-973673baf926?w=600&auto=format&fit=crop&q=60';
+        const classNameKr = latestLog.class_name === 'mouse' ? '쥐' : (latestLog.class_name === 'cockroach' ? '바퀴벌레' : latestLog.class_name);
+        snapshotInfo.innerHTML = `<strong>최근 감지 스냅샷:</strong> ${classNameKr} (${Math.round(latestLog.confidence * 100)}% 신뢰도) <br> <span style="color: var(--color-text-secondary); font-size: 0.85rem;">타임스탬프: ${latestLog.timestamp}</span>`;
+      } else {
+        snapshotImg.src = 'https://images.unsplash.com/photo-1557683316-973673baf926?w=600&auto=format&fit=crop&q=60';
+        snapshotInfo.innerHTML = `카메라 전원이 꺼져 있으며, 이벤트가 감지되지 않았습니다.`;
+      }
+    }
   }
 
-  // Detection target toggle setup
-  const detectMouse = document.getElementById('detectMouse');
-  const detectCockroach = document.getElementById('detectCockroach');
-
-  detectMouse.checked = camera.targets.mouse;
-  detectCockroach.checked = camera.targets.cockroach;
+  updateStreamDisplay();
 
   function syncPiPowerConfig(action) {
     // Only manage camera power/usage through shared file as requested
@@ -75,16 +73,7 @@ window.addEventListener('DOMContentLoaded', async () => {
   powerToggle.addEventListener('change', (e) => {
     camera.enabled = e.target.checked;
     syncPiPowerConfig(camera.enabled ? '카메라 사용 설정(ON)' : '카메라 사용 해제(OFF)');
-  });
-
-  detectMouse.addEventListener('change', (e) => {
-    camera.targets.mouse = e.target.checked;
-    console.log(`[로컬 설정] 쥐 탐지 필터가 ${e.target.checked ? '활성화' : '비활성화'} 되었습니다.`);
-  });
-
-  detectCockroach.addEventListener('change', (e) => {
-    camera.targets.cockroach = e.target.checked;
-    console.log(`[로컬 설정] 바퀴벌레 탐지 필터가 ${e.target.checked ? '활성화' : '비활성화'} 되었습니다.`);
+    updateStreamDisplay();
   });
 
   // Render weekly stats chart (7 days)

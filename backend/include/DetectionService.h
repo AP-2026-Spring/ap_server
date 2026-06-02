@@ -21,8 +21,17 @@ public:
     // 기기 목록 반환
     json getDevices() const;
 
+    // 기기 동적 등록
+    void addDevice(const json& device);
+
+    // 기기 삭제
+    bool removeDevice(uint64_t device_id);
+
     // 모의 카메라 상태 업데이트 (Test Mode)
     void updateMockCameraState(int camera_id, bool enabled);
+
+    // 카메라 탐지 타겟 설정 업데이트
+    void updateCameraTargets(int camera_id, bool mouse, bool cockroach);
 
     // 목데이터 DB 시딩
     void seedMockData();
